@@ -1,0 +1,72 @@
+import json
+import random
+import spacy
+import pickle
+import warnings
+from spacy.util import minibatch, compounding
+
+from pathlib import Path
+#nlp = spacy.load("en_core_web_sm")
+#from spacy.training import Example
+#for new model use blank
+
+
+file = "training_data.txt"
+dict = {}
+with open(file) as fn:
+    for d in fn:
+            key,desc = d.strip().split(None,1)
+            dict[key] = desc.strip()
+otfile = open("output.json", "w")
+json.dump(dict,otfile)
+otfile.close()
+
+def load_data(file):
+    with open(file, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    return(data)
+    
+train_data = load_data("output.json")
+
+print(train_data)
+
+import spacy
+from spacy.util import minibatch, compounding
+from spacy.training import Example
+nlp = spacy.blank('en')
+def train_model(train_data):
+    if 'ner' not in nlp.pipe_names:
+        ner = nlp.create_pipe('ner')
+        nlp.add_pipe(ner, last = True)
+    
+#     for _, annotation in train_data:
+#         for ent in annotation['entities']:
+#             ner.add_label(ent[2])
+            
+    
+    other_pipes = [pipe for pipe in nlp.pipe_names if pipe != 'ner']
+    with nlp.disable_pipes(*other_pipes):  # only train NER
+        optimizer = nlp.begin_training()
+        for itn in range(10):
+            print("Statring iteration " + str(itn))
+            random.sample(list(train_data),k=20)
+            losses = {}
+            index = 0
+            example = Example(predicted, reference)
+            nlp.update(
+                        [example],
+                        sgd=optimizer,  # callable to update weights
+                      )
+    ner = nlp.get_pipe("ner")
+    ner.to_disk("navi_ner")          
+    
+    nlp_mod = train_model(train_data)
+print(nlp_mod)
+
+nlp_model2 = spacy.load("navi_ner")
+doc2 = nlp_model2("BALDWIN COUNTY, ALABAMA HARRY D'OLIVE, J. PROBATE JUDGE Filed/cert. 4/1/2021 9:19 AM TOTAL $ ")
+
+
+for ent in doc2.ents:
+    print(f'{ent.label_:{30}} {ent.text}')
+    
